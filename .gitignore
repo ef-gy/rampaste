@@ -1,0 +1,12 @@
+*.swp
+*.tmp
+test-*
+!src/test-*
+!test-*.h
+documentation/html
+documentation/xml
+*.dSYM
+.DS_*
+dependencies.mk
+rampaste
+!include/rampaste
