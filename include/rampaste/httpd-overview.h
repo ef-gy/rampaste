@@ -62,25 +62,27 @@ static const char *description =
  */
 static void overview(cxxhttp::http::sessionData &session, std::smatch &re) {
   auto &s = set<>::global();
-  auto &ps = s.ps;
-  auto &ids = s.ids;
 
   std::ostringstream response;
 
   s.prune();
 
   response << "# RAMpaste\n\n"
-           << "This server currently has " << ps.size()
+           << "This server currently has " << s.ps.size()
            << " pastes in memory using " << s.size() << " bytes of RAM.\n";
 
-  for (auto &id : ids) {
-    auto d = ps.find(id);
-    if (d != ps.end()) {
+  long cnt = 0;
+  for (auto &id : s.ids) {
+    auto d = s.ps.find(id);
+    if (d != s.ps.end()) {
       auto &p = d->second;
       const auto content = p.getAbbreviatedContent();
       response << "\n## Paste " << id << "\n\n"
-               << content << "\n[static link](/paste/" << id
-               << ")\n";
+               << content << "\n[static link](/paste/" << id << ")\n";
+    }
+    cnt++;
+    if (cnt > 10) {
+      break;
     }
   }
 

@@ -60,13 +60,12 @@ static const char *description = "Retrieve a single paste by its ID number.";
  */
 static void view(cxxhttp::http::sessionData &session, std::smatch &re) {
   auto &s = set<>::global();
-  auto &ps = s.ps;
   const std::string idx = re[1];
   long id = std::strtol(idx.c_str(), 0, 10);
   std::string res = "";
 
-  const auto p = ps.find(id);
-  if (p != ps.end()) {
+  const auto p = s.ps.find(id);
+  if (p != s.ps.end()) {
     if (!p->second.isExpired()) {
       res = p->second.getContent();
     }

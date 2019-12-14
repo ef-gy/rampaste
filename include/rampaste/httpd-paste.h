@@ -69,20 +69,6 @@ static const cxxhttp::http::headers negotiations = {
 static const char *description =
     "An endpoint that allows creating new pastes by sending a POST request.";
 
-/* Seed randomiser for new pastes.
- *
- * Before anything can be posted, the randomiser needs to be seeded. Pretty sure
- * the random numbers that this produces aren't great, but they're good enough
- * for a simple pastebin clone.
- */
-static void maybeSeedRandomiser(void) {
-  static bool seeded = false;
-  if (!seeded) {
-    std::srand(std::time(0));
-    seeded = true;
-  }
-}
-
 /* Paste post method implementation.
  * @session The HTTP session to reply to.
  * @re Parsed resource match set.
@@ -92,8 +78,6 @@ static void maybeSeedRandomiser(void) {
 static void newPaste(cxxhttp::http::sessionData &session, std::smatch &re) {
   const auto &type = session.negotiated["Content-Type"];
   auto &s = set<>::global();
-  auto &ps = s.ps;
-  auto &ids = s.ids;
 
   std::string content = "";
   long maxHits = 0;
@@ -125,20 +109,10 @@ static void newPaste(cxxhttp::http::sessionData &session, std::smatch &re) {
     }
 
     std::ostringstream response;
-    long id;
+    long id = s.add(content, maxHits, type);
 
-    response << "# RAMpaste: OK\n\nYour post was created.\n";
-
-    maybeSeedRandomiser();
-
-    do {
-      id = std::rand();
-    } while (ps.find(id) != ps.end());
-
-    response << "View [your paste here](/paste/" << id << ").\n";
-
-    ids.emplace_front(id);
-    ps.emplace(id, paste<>(content, maxHits, type));
+    response << "# RAMpaste: OK\n\nYour post was created.\n"
+             << "View [your paste here](/paste/" << id << ").\n";
 
     session.reply(200, response.str());
   }

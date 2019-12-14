@@ -19,7 +19,7 @@
 #define USE_DEFAULT_IO_MAIN
 
 #include <cxxhttp/httpd-options.h>
-#include <cxxhttp/httpd.h>
+#include <prometheus/httpd-metrics.h>
 #include <rampaste/httpd-overview.h>
 #include <rampaste/httpd-paste.h>
 #include <rampaste/httpd-view.h>

@@ -16,12 +16,24 @@
 #define RAMPASTE_PASTE_H
 
 #include <ef.gy/global.h>
+#include <prometheus/metric.h>
 
 #include <list>
 #include <map>
 #include <string>
 
 namespace rampaste {
+namespace metrics {
+static prometheus::metric::counter pastesCreated(
+    "rampaste_created_pastes",
+    "Pastes created in total over the lifetime of the process.", {"instance"});
+static prometheus::metric::counter pastesDeleted(
+    "rampaste_deleted_pastes",
+    "Pastes deleted in total over the lifetime of the process.", {"instance"});
+static prometheus::metric::gauge pasteSize("rampaste_paste_size_bytes",
+                                           "Current RAM usage of RAMpaste.",
+                                           {"instance"});
+}  // namespace metrics
 
 template <typename S = std::string, typename I = long>
 class paste {
@@ -63,16 +75,55 @@ class paste {
   I hits;
 };
 
+/* Seed randomiser for new pastes.
+ *
+ * Before anything can be posted, the randomiser needs to be seeded. Pretty sure
+ * the random numbers that this produces aren't great, but they're good enough
+ * for a simple pastebin clone.
+ */
+static void maybeSeedRandomiser(void) {
+  static bool seeded = false;
+  if (!seeded) {
+    std::srand(std::time(0));
+    seeded = true;
+  }
+}
+
 template <typename S = std::string, typename I = long>
 class set {
  public:
-  using pastes = std::map<I, paste<S, I>>;
+  using paste = rampaste::paste<S, I>;
+  using pastes = std::map<I, paste>;
   using index = std::list<I>;
 
   pastes ps;
   index ids;
 
+  set(const std::string &pInstance = "global")
+      : instance(pInstance),
+        created(metrics::pastesCreated.labels({pInstance})),
+        deleted(metrics::pastesDeleted.labels({pInstance})),
+        usage(metrics::pasteSize.labels({pInstance})) {}
+
   static set &global(void) { return efgy::global<set>(); }
+
+  I add(const S &content, const I &maxHits = 0,
+        const std::string type = "text/plain") {
+    I id;
+
+    maybeSeedRandomiser();
+
+    do {
+      id = std::rand();
+    } while (ps.find(id) != ps.end());
+
+    ids.emplace_front(id);
+    ps.emplace(id, paste(content, maxHits, type));
+
+    created.inc();
+
+    return id;
+  }
 
   /* Prune current list of pastes.
    *
@@ -90,6 +141,7 @@ class set {
     // secondary pass to not invalidate iterators for the first loop.
     for (const auto &i : toRemove) {
       ps.erase(i);
+      deleted.inc();
     }
   }
 
@@ -115,6 +167,7 @@ class set {
     // secondary pass to not invalidate iterators for the first loop.
     for (const auto &i : toRemove) {
       ps.erase(i);
+      deleted.inc();
     }
   }
 
@@ -132,8 +185,16 @@ class set {
       r += p.second.size();
     }
 
+    usage.set(r);
+
     return r;
   }
+
+ protected:
+  const std::string instance;
+  prometheus::metric::counter &created;
+  prometheus::metric::counter &deleted;
+  prometheus::metric::gauge &usage;
 };
 
 }  // namespace rampaste
