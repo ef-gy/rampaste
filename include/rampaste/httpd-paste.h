@@ -15,17 +15,9 @@
 #if !defined(RAMPASTE_HTTPD_PASTE_H)
 #define RAMPASTE_HTTPD_PASTE_H
 
-#if !defined(RAMPASTE_MAX_RAM_USAGE)
-/* Max amount of RAM usage for the paste buffer.
- *
- * New posts must be at most half this size, and older posts will be discarded
- * to make room for new pastes if need be.
- */
-#define RAMPASTE_MAX_RAM_USAGE (8 * 1024 * 1024)
-#endif
-
 #include <cxxhttp/httpd.h>
 #include <cxxhttp/uri.h>
+#include <ef.gy/cli.h>
 #include <ef.gy/global.h>
 #include <rampaste/paste.h>
 
@@ -34,6 +26,17 @@
 #include <sstream>
 
 namespace rampaste {
+namespace cli {
+/* Max amount of RAM usage for the paste buffer.
+ *
+ * New posts must be at most half this size, and older posts will be discarded
+ * to make room for new pastes if need be.
+ */
+efgy::cli::flag<long> maxRamUsage(
+    "max-ram-usage", (1024 * 1024 * 8),
+    "max amount of RAM to use for the RAMpaste service; default 8 MiB");
+}  // namespace cli
+
 /* Handler for posting new pastes.
  *
  * This endpoint lets you create new pastes to later be viewed.
@@ -114,10 +117,10 @@ static void newPaste(cxxhttp::http::sessionData &session, std::smatch &re) {
   if (content.size() == 0) {
     session.reply(400, "'content' parameter must not be empty.\n");
   }
-  if (content.size() > RAMPASTE_MAX_RAM_USAGE / 2) {
+  if (content.size() > long(cli::maxRamUsage) / 2) {
     session.reply(500, "Not enough RAM available to post this.\n");
   } else {
-    if ((size(ps) + paste<>::size(content)) > RAMPASTE_MAX_RAM_USAGE) {
+    if ((size(ps) + paste<>::size(content)) > long(cli::maxRamUsage)) {
       freeAtLeast(ps, ids, paste<>::size(content));
     }
 
