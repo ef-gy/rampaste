@@ -125,6 +125,12 @@ class set {
     return id;
   }
 
+  void erase(const I &id) {
+    ps.erase(id);
+    ids.remove(id);
+    deleted.inc();
+  }
+
   /* Prune current list of pastes.
    *
    * Removes expired paste from a paste map.
@@ -133,15 +139,13 @@ class set {
     index toRemove;
     for (auto &p : ps) {
       if (p.second.isExpired()) {
-        ids.remove(p.first);
         toRemove.push_back(p.first);
       }
     }
 
     // secondary pass to not invalidate iterators for the first loop.
     for (const auto &i : toRemove) {
-      ps.erase(i);
-      deleted.inc();
+      erase(i);
     }
   }
 
@@ -156,7 +160,6 @@ class set {
 
     for (auto p = ps.rbegin(); p != ps.rend(); ++p) {
       freed += p->second.size();
-      ids.remove(p->first);
       toRemove.push_back(p->first);
 
       if (freed > toFree) {
@@ -166,8 +169,7 @@ class set {
 
     // secondary pass to not invalidate iterators for the first loop.
     for (const auto &i : toRemove) {
-      ps.erase(i);
-      deleted.inc();
+      erase(i);
     }
   }
 
