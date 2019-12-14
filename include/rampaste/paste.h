@@ -99,7 +99,7 @@ class set {
   pastes ps;
   index ids;
 
-  set(const std::string &pInstance = "global")
+  set(const std::string &pInstance = "default")
       : instance(pInstance),
         created(metrics::pastesCreated.labels({pInstance})),
         deleted(metrics::pastesDeleted.labels({pInstance})),
