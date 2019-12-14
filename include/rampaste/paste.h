@@ -125,10 +125,27 @@ class set {
     return id;
   }
 
+  /* Delete specific index number.
+   * @id The paste to delete.
+   *
+   * This will remove a specific paste by its index number from both the map and
+   * the index set.
+   */
   void erase(const I &id) {
     ps.erase(id);
     ids.remove(id);
     deleted.inc();
+  }
+
+  /* Delete list of pastes.
+   * @toRemove The list of pastes to delete.
+   *
+   * Delete all pastes provided.
+   */
+  void erase(const index &toRemove) {
+    for (const auto &i : toRemove) {
+      erase(i);
+    }
   }
 
   /* Prune current list of pastes.
@@ -143,10 +160,7 @@ class set {
       }
     }
 
-    // secondary pass to not invalidate iterators for the first loop.
-    for (const auto &i : toRemove) {
-      erase(i);
-    }
+    erase(toRemove);
   }
 
   /* Free a specific amount of RAM.
@@ -167,10 +181,7 @@ class set {
       }
     }
 
-    // secondary pass to not invalidate iterators for the first loop.
-    for (const auto &i : toRemove) {
-      erase(i);
-    }
+    erase(toRemove);
   }
 
   /* Calculate total RAM usage of the service.
