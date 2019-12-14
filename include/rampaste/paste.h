@@ -40,6 +40,14 @@ class paste {
     return content;
   }
 
+  const S getAbbreviatedContent(void) {
+    const S &c = getContent();
+    if (c.size() > 50) {
+      return c.substr(0, 50) + " [...]";
+    }
+    return c;
+  }
+
   const bool isExpired(void) { return maxHits > 0 && hits >= maxHits; }
 
   const std::size_t size(void) const { return sizeof(paste) + content.size(); }

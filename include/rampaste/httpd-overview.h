@@ -77,9 +77,9 @@ static void overview(cxxhttp::http::sessionData &session, std::smatch &re) {
     auto d = ps.find(id);
     if (d != ps.end()) {
       auto &p = d->second;
-      const auto &content = p.getContent();
+      const auto content = p.getAbbreviatedContent();
       response << "\n## Paste " << id << "\n\n"
-               << content.substr(0, 50) << "(...)\n[static link](/paste/" << id
+               << content << "\n[static link](/paste/" << id
                << ")\n";
     }
   }
