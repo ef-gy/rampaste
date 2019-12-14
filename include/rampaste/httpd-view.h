@@ -16,7 +16,6 @@
 #define RAMPASTE_HTTPD_VIEW_H
 
 #include <cxxhttp/httpd.h>
-#include <ef.gy/global.h>
 #include <rampaste/paste.h>
 
 #include <cstdlib>
@@ -60,7 +59,8 @@ static const char *description = "Retrieve a single paste by its ID number.";
  * Returns a single paste by ID.
  */
 static void view(cxxhttp::http::sessionData &session, std::smatch &re) {
-  auto &ps = efgy::global<pastes<>>();
+  auto &s = set<>::global();
+  auto &ps = s.ps;
   const std::string idx = re[1];
   long id = std::strtol(idx.c_str(), 0, 10);
   std::string res = "";

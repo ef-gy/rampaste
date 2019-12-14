@@ -18,7 +18,6 @@
 #include <cxxhttp/httpd.h>
 #include <cxxhttp/uri.h>
 #include <ef.gy/cli.h>
-#include <ef.gy/global.h>
 #include <rampaste/paste.h>
 
 #include <cstdlib>
@@ -92,8 +91,9 @@ static void maybeSeedRandomiser(void) {
  */
 static void newPaste(cxxhttp::http::sessionData &session, std::smatch &re) {
   const auto &type = session.negotiated["Content-Type"];
-  auto &ps = efgy::global<pastes<>>();
-  auto &ids = efgy::global<index<>>();
+  auto &s = set<>::global();
+  auto &ps = s.ps;
+  auto &ids = s.ids;
 
   std::string content = "";
   long maxHits = 0;
@@ -120,8 +120,8 @@ static void newPaste(cxxhttp::http::sessionData &session, std::smatch &re) {
   if (content.size() > long(cli::maxRamUsage) / 2) {
     session.reply(500, "Not enough RAM available to post this.\n");
   } else {
-    if ((size(ps) + paste<>::size(content)) > long(cli::maxRamUsage)) {
-      freeAtLeast(ps, ids, paste<>::size(content));
+    if ((s.size() + paste<>::size(content)) > long(cli::maxRamUsage)) {
+      s.freeAtLeast(paste<>::size(content));
     }
 
     std::ostringstream response;
